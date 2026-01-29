@@ -50,6 +50,7 @@ class DiagramManager:
         self._max_history = max_history
         self._dirty = False  # True if unsaved changes exist
         self._on_change_callbacks: list[Callable] = []
+        self._on_save_callbacks: list[Callable] = []  # Called after successful save
 
         # O(1) lookup indexes
         self._node_index: dict[str, Node] = {}          # node_id -> Node
@@ -171,6 +172,35 @@ class DiagramManager:
         for callback in self._on_change_callbacks:
             callback()
 
+    # --- Save Callbacks ---
+
+    def on_save(self, callback: Callable):
+        """Register a callback for diagram saves.
+
+        Callback receives (path: Path, diagram_info: dict) where diagram_info contains:
+        - name: diagram name
+        - node_count: number of nodes
+        - edge_count: number of edges
+        """
+        self._on_save_callbacks.append(callback)
+
+    def _notify_save(self, path: Path):
+        """Notify all registered callbacks of a successful save."""
+        if not self._on_save_callbacks or self._diagram is None:
+            return
+
+        diagram_info = {
+            "name": self._diagram.name,
+            "node_count": len(self._diagram.nodes),
+            "edge_count": len(self._diagram.edges),
+        }
+
+        for callback in self._on_save_callbacks:
+            try:
+                callback(path, diagram_info)
+            except Exception:
+                pass  # Don't let callback failures affect save operation
+
     # --- History Management ---
 
     def _save_to_history(self):
@@ -253,6 +283,10 @@ class DiagramManager:
 
         self._file_path = path
         self._dirty = False
+
+        # Notify save callbacks (for external integrations)
+        self._notify_save(path)
+
         return path
 
     # --- Undo/Redo ---

@@ -33,6 +33,42 @@ from core import (
 from diagram_manager import diagram_manager
 from websocket_manager import ws_manager
 
+# Path to hooks directory (can be overridden via env var)
+import os
+HOOKS_DIR = Path(os.environ.get(
+    "DIAGRAM_TOOL_HOOKS_DIR",
+    str(Path(__file__).parent.parent / "hooks")
+))
+
+
+def load_hooks():
+    """Load and register hooks from the hooks directory.
+
+    Hooks are Python modules with a register_hooks(diagram_manager) function.
+    This allows external integrations (like Systems) without coupling core code.
+    """
+    if not HOOKS_DIR.exists():
+        return
+
+    import importlib.util
+
+    for hook_file in HOOKS_DIR.glob("*.py"):
+        if hook_file.name.startswith("_"):
+            continue
+
+        try:
+            spec = importlib.util.spec_from_file_location(
+                hook_file.stem, hook_file
+            )
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+
+                if hasattr(module, "register_hooks"):
+                    module.register_hooks(diagram_manager)
+        except Exception:
+            pass  # Silently skip failed hooks
+
 
 # --- Async change notification ---
 # Bridge between sync DiagramManager callbacks and async WebSocket broadcasts
@@ -61,6 +97,9 @@ async def lifespan(app: FastAPI):
     """Lifespan handler for startup/shutdown tasks."""
     # Register change callback
     diagram_manager.on_change(on_diagram_change)
+
+    # Load external hooks (Systems integration, etc.)
+    load_hooks()
 
     # Start background broadcaster
     broadcaster_task = asyncio.create_task(change_broadcaster())
