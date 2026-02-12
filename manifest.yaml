@@ -1,0 +1,16 @@
+name: diagram-tool
+description: Visual diagram editor with React frontend and Python backend
+state: ready
+traits:
+- published
+- systemd-service
+- api
+- gui
+- mcp-tools
+- python
+- configurable
+tags:
+- MCP
+- Python
+- Frontend
+- JavaScript

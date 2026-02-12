@@ -616,7 +616,7 @@ function SaveAsModal({ currentPath, onConfirm, onCancel }: SaveAsModalProps) {
     inputRef.current?.focus();
     if (!currentPath) {
       // Suggest a default path
-      setPath('/home/nick/diagrams/diagram.json');
+      setPath('~/diagrams/diagram.json');
     }
   }, [currentPath]);
 

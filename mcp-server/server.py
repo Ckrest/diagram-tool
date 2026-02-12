@@ -7,9 +7,10 @@ All changes are immediately reflected in the frontend via WebSocket updates.
 """
 
 import httpx
+import json
+import os
 from mcp.server.fastmcp import FastMCP
 from typing import Optional
-import json
 
 # Backend API URL
 API_BASE = "http://127.0.0.1:8765/api"
@@ -60,7 +61,7 @@ def diagram_get_current() -> str:
 
 
 @mcp.tool()
-def diagram_list_diagrams(directory: str = "/home/nick/diagrams") -> str:
+def diagram_list_diagrams(directory: str = os.path.expanduser("~/diagrams")) -> str:
     """
     List available diagram files on disk.
 

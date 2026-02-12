@@ -2,8 +2,8 @@
 # Diagram Tool - Combined startup script for systemd service
 # Starts backend, frontend, and opens browser
 
-TOOL_DIR="/home/nick/Systems/tools/diagram-tool"
-BACKEND_DIR="$TOOL_DIR/backend"
+TOOL_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKEND_DIR="$TOOL_DIR/src/backend"
 FRONTEND_DIR="$TOOL_DIR/frontend"
 BACKEND_URL="http://127.0.0.1:8765"
 FRONTEND_URL="http://localhost:5173"

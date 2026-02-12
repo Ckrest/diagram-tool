@@ -13,10 +13,6 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Callable
-import sys
-
-# Add parent directory to path for core module access
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.models import Diagram, Node, Edge, DiagramMetadata
 from core.layout import (

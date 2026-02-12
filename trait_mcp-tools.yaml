@@ -1,0 +1,604 @@
+tools:
+# ── Service Management ───────────────────────────────────────────────────────
+
+- name: diagram_start
+  description: |
+    Start the diagram tool service (backend + frontend + opens browser).
+
+    Call this before working on diagrams. It will:
+    1. Start the backend API server
+    2. Open the visual editor in your browser
+
+    If already running, does nothing.
+
+    Returns status indicating if service started or was already running.
+  command: '{binary} start'
+  binary: ./src/cli.py
+  returns: json
+  timeout: 30
+  parameters: []
+
+- name: diagram_stop
+  description: |
+    Stop the diagram tool service.
+
+    Shuts down both the backend and frontend servers.
+  command: '{binary} stop'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+# ── Core Inspection ──────────────────────────────────────────────────────────
+
+- name: diagram_get_current
+  description: |
+    Get the full current diagram state.
+
+    Returns the complete diagram including all nodes, edges, metadata,
+    and current file path. Use this to understand what's in the diagram
+    before making changes.
+  command: '{binary} get-current'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+- name: diagram_list_diagrams
+  description: |
+    List available diagram files on disk.
+
+    Args:
+        directory: Directory to search for diagram JSON files
+
+    Returns list of diagrams with their paths, names, and node/edge counts.
+  command: '{binary} list-diagrams --directory {directory}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: directory
+    type: string
+    default: "~/diagrams"
+    description: Directory to search for diagram JSON files
+
+- name: diagram_open
+  description: |
+    Load a diagram from a file as the active diagram.
+
+    Args:
+        file_path: Full path to the diagram JSON file
+
+    Returns the opened diagram's state.
+  command: '{binary} open --file-path {file_path}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: file_path
+    type: string
+    required: true
+    description: Full path to the diagram JSON file
+
+- name: diagram_new
+  description: |
+    Create a new empty diagram.
+
+    Args:
+        name: Name for the new diagram
+
+    Returns the new diagram's state.
+  command: '{binary} new --name {name}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: name
+    type: string
+    default: "Untitled Diagram"
+    description: Name for the new diagram
+
+- name: diagram_save
+  description: |
+    Save the current diagram to a file.
+
+    Args:
+        file_path: Path to save to (uses current path if not specified)
+
+    Returns the saved file path.
+  command: '{binary} save --file-path {file_path}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: file_path
+    type: string
+    default: null
+    description: Path to save to (uses current path if not specified)
+
+# ── Node Tools ───────────────────────────────────────────────────────────────
+
+- name: diagram_add_node
+  description: |
+    Create a new node on the canvas.
+
+    Args:
+        label: Display text for the node
+        x: X coordinate on canvas
+        y: Y coordinate on canvas
+        node_type: Semantic type (component, service, database, user, external, process, decision, note)
+        shape: Visual shape (rectangle, ellipse, diamond, pill)
+        color: Hex color code (e.g. "#3478f6")
+        width: Node width in pixels
+        height: Node height in pixels
+        tags: List of tags for categorization
+        description: Optional longer description
+
+    Returns the created node with its generated ID.
+  command: '{binary} add-node --label {label} --x {x} --y {y} --node-type {node_type} --shape {shape} --color {color} --width {width} --height {height} --tags {tags} --description {description}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: label
+    type: string
+    required: true
+    description: Display text for the node
+  - name: x
+    type: float
+    default: 100
+    description: X coordinate on canvas
+  - name: y
+    type: float
+    default: 100
+    description: Y coordinate on canvas
+  - name: node_type
+    type: string
+    default: "component"
+    description: Semantic type (component, service, database, user, external, process, decision, note)
+  - name: shape
+    type: string
+    default: "rectangle"
+    description: Visual shape (rectangle, ellipse, diamond, pill)
+  - name: color
+    type: string
+    default: "#3478f6"
+    description: Hex color code
+  - name: width
+    type: float
+    default: 150
+    description: Node width in pixels
+  - name: height
+    type: float
+    default: 80
+    description: Node height in pixels
+  - name: tags
+    type: list
+    default: null
+    description: List of tags for categorization
+  - name: description
+    type: string
+    default: ""
+    description: Optional longer description
+
+- name: diagram_update_node
+  description: |
+    Modify an existing node's properties or position.
+
+    Only provided fields are updated; others remain unchanged.
+  command: '{binary} update-node --node-id {node_id} --label {label} --x {x} --y {y} --node-type {node_type} --shape {shape} --color {color} --width {width} --height {height} --tags {tags} --description {description}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: node_id
+    type: string
+    required: true
+    description: ID of the node to update
+  - name: label
+    type: string
+    default: null
+    description: New display text
+  - name: x
+    type: float
+    default: null
+    description: New X coordinate
+  - name: y
+    type: float
+    default: null
+    description: New Y coordinate
+  - name: node_type
+    type: string
+    default: null
+    description: New semantic type
+  - name: shape
+    type: string
+    default: null
+    description: New visual shape
+  - name: color
+    type: string
+    default: null
+    description: New hex color
+  - name: width
+    type: float
+    default: null
+    description: New width
+  - name: height
+    type: float
+    default: null
+    description: New height
+  - name: tags
+    type: list
+    default: null
+    description: New tags list (replaces existing)
+  - name: description
+    type: string
+    default: null
+    description: New description
+
+- name: diagram_delete_node
+  description: |
+    Remove a node and all its connected edges.
+
+    Args:
+        node_id: ID of the node to delete
+
+    The node and any edges connected to it will be removed.
+  command: '{binary} delete-node --node-id {node_id}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: node_id
+    type: string
+    required: true
+    description: ID of the node to delete
+
+- name: diagram_search_nodes
+  description: |
+    Find nodes by label, tag, or type.
+
+    All criteria are AND'ed together.
+  command: '{binary} search-nodes --label {label} --tag {tag} --node-type {node_type}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: label
+    type: string
+    default: null
+    description: Search for nodes containing this text in their label
+  - name: tag
+    type: string
+    default: null
+    description: Search for nodes with this tag
+  - name: node_type
+    type: string
+    default: null
+    description: Search for nodes of this type
+
+# ── Edge Tools ───────────────────────────────────────────────────────────────
+
+- name: diagram_add_edge
+  description: |
+    Connect two nodes with a directed edge.
+
+    Creates an arrow from source to target.
+  command: '{binary} add-edge --from-node {from_node} --to-node {to_node} --label {label} --auto-route {auto_route} --source-side {source_side} --target-side {target_side}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: from_node
+    type: string
+    required: true
+    description: ID of the source node
+  - name: to_node
+    type: string
+    required: true
+    description: ID of the target node
+  - name: label
+    type: string
+    default: ""
+    description: Optional label for the edge
+  - name: auto_route
+    type: boolean
+    default: true
+    description: If True, automatically calculate optimal connection sides
+  - name: source_side
+    type: string
+    default: null
+    description: 'Explicit source side ("top", "right", "bottom", "left")'
+  - name: target_side
+    type: string
+    default: null
+    description: 'Explicit target side ("top", "right", "bottom", "left")'
+
+- name: diagram_update_edge
+  description: |
+    Update an edge's properties (label, color, style, etc.).
+  command: '{binary} update-edge --edge-id {edge_id} --label {label} --color {color} --width {width} --style {style} --arrow-start {arrow_start} --arrow-end {arrow_end}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: edge_id
+    type: string
+    required: true
+    description: ID of the edge to update
+  - name: label
+    type: string
+    default: null
+    description: New label text
+  - name: color
+    type: string
+    default: null
+    description: 'Line color (hex, e.g. "#3498db")'
+  - name: width
+    type: float
+    default: null
+    description: Line width in pixels
+  - name: style
+    type: string
+    default: null
+    description: 'Line style ("solid", "dashed", "dotted")'
+  - name: arrow_start
+    type: string
+    default: null
+    description: 'Arrow at source ("none", "arrow", "filled", "diamond", "circle")'
+  - name: arrow_end
+    type: string
+    default: null
+    description: 'Arrow at target ("none", "arrow", "filled", "diamond", "circle")'
+
+- name: diagram_set_edge_sides
+  description: |
+    Set which sides of nodes an edge connects to.
+
+    Use this to fix edge routing for specific edges.
+  command: '{binary} set-edge-sides --edge-id {edge_id} --source-side {source_side} --target-side {target_side}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: edge_id
+    type: string
+    required: true
+    description: ID of the edge to update
+  - name: source_side
+    type: string
+    default: null
+    description: 'Side of source node ("top", "right", "bottom", "left")'
+  - name: target_side
+    type: string
+    default: null
+    description: 'Side of target node ("top", "right", "bottom", "left")'
+
+- name: diagram_auto_route_all
+  description: |
+    Automatically re-route all edges for optimal layout.
+
+    This recalculates the connection sides for all edges based on
+    the relative positions of their source and target nodes.
+
+    Use this after moving nodes to clean up edge routing.
+  command: '{binary} auto-route-all'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+- name: diagram_delete_edge
+  description: |
+    Remove an edge.
+
+    Args:
+        edge_id: ID of the edge to delete
+  command: '{binary} delete-edge --edge-id {edge_id}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: edge_id
+    type: string
+    required: true
+    description: ID of the edge to delete
+
+# ── Layout Tools ─────────────────────────────────────────────────────────────
+
+- name: diagram_auto_layout
+  description: |
+    Automatically arrange all nodes based on a layout strategy.
+
+    Args:
+        strategy: Layout algorithm to use
+            - "grid": Arrange nodes in a grid pattern
+            - "tree": Hierarchical layout based on edge directions
+            - "force": Force-directed layout (connected nodes attract)
+
+    All nodes will be repositioned.
+  command: '{binary} auto-layout --strategy {strategy}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: strategy
+    type: string
+    default: "grid"
+    description: 'Layout algorithm: "grid", "tree", or "force"'
+
+- name: diagram_align_nodes
+  description: |
+    Align selected nodes along an edge or center.
+
+    Args:
+        node_ids: List of node IDs to align
+        alignment: How to align them
+            - "left": Align left edges
+            - "right": Align right edges
+            - "top": Align top edges
+            - "bottom": Align bottom edges
+            - "center_h": Align horizontal centers
+            - "center_v": Align vertical centers
+  command: '{binary} align-nodes --node-ids {node_ids} --alignment {alignment}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: node_ids
+    type: list
+    required: true
+    description: List of node IDs to align
+  - name: alignment
+    type: string
+    default: "left"
+    description: 'Alignment type: "left", "right", "top", "bottom", "center_h", "center_v"'
+
+- name: diagram_distribute_nodes
+  description: |
+    Evenly space nodes along an axis.
+
+    Nodes will be evenly spaced between the first and last node's position.
+  command: '{binary} distribute-nodes --node-ids {node_ids} --axis {axis}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: node_ids
+    type: list
+    required: true
+    description: List of node IDs to distribute (needs at least 3)
+  - name: axis
+    type: string
+    default: "horizontal"
+    description: '"horizontal" or "vertical"'
+
+# ── Metadata Tools ───────────────────────────────────────────────────────────
+
+- name: diagram_set_node_metadata
+  description: |
+    Update a node's semantic metadata (type, tags, description).
+  command: '{binary} set-node-metadata --node-id {node_id} --node-type {node_type} --tags {tags} --description {description}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: node_id
+    type: string
+    required: true
+    description: ID of the node to update
+  - name: node_type
+    type: string
+    default: null
+    description: New semantic type (component, service, database, etc.)
+  - name: tags
+    type: list
+    default: null
+    description: New tags list (replaces existing)
+  - name: description
+    type: string
+    default: null
+    description: New description text
+
+- name: diagram_bulk_tag_nodes
+  description: |
+    Add or remove tags from multiple nodes at once.
+
+    Useful for bulk categorization.
+  command: '{binary} bulk-tag-nodes --node-ids {node_ids} --add-tags {add_tags} --remove-tags {remove_tags}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: node_ids
+    type: list
+    required: true
+    description: List of node IDs to modify
+  - name: add_tags
+    type: list
+    default: null
+    description: Tags to add to all specified nodes
+  - name: remove_tags
+    type: list
+    default: null
+    description: Tags to remove from all specified nodes
+
+# ── History / Undo ───────────────────────────────────────────────────────────
+
+- name: diagram_undo
+  description: |
+    Revert the last change.
+
+    Undoes the most recent modification to the diagram.
+  command: '{binary} undo'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+- name: diagram_redo
+  description: |
+    Reapply an undone change.
+
+    Redoes a change that was previously undone.
+  command: '{binary} redo'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+- name: diagram_create_snapshot
+  description: |
+    Save a named restore point.
+
+    Args:
+        name: Name for this snapshot (e.g., "before_refactor")
+
+    Snapshots persist until explicitly deleted and can be restored at any time.
+  command: '{binary} create-snapshot --name {name}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: name
+    type: string
+    required: true
+    description: Name for this snapshot
+
+- name: diagram_list_snapshots
+  description: |
+    Show all available named snapshots.
+
+    Returns a list of snapshot names and when they were created.
+  command: '{binary} list-snapshots'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+- name: diagram_restore_snapshot
+  description: |
+    Restore a saved snapshot.
+
+    Args:
+        name: Name of the snapshot to restore
+
+    The current diagram state will be replaced with the snapshot.
+    The current state is added to undo history first.
+  command: '{binary} restore-snapshot --name {name}'
+  binary: ./src/cli.py
+  returns: json
+  parameters:
+  - name: name
+    type: string
+    required: true
+    description: Name of the snapshot to restore
+
+# ── Analysis Tools ───────────────────────────────────────────────────────────
+
+- name: diagram_validate_structure
+  description: |
+    Check the diagram for common structural issues.
+
+    Returns a list of warnings/errors such as:
+    - Orphan nodes (no connections)
+    - Missing labels
+    - Duplicate edges
+    - Invalid edge references
+    - Self-referencing edges
+  command: '{binary} validate-structure'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []
+
+- name: diagram_summarize
+  description: |
+    Get a structured summary of the current diagram.
+
+    Returns:
+    - Node count by type
+    - Edge count
+    - Tags in use
+    - Connected components
+    - Most connected nodes
+    - Orphan count
+  command: '{binary} summarize'
+  binary: ./src/cli.py
+  returns: json
+  parameters: []

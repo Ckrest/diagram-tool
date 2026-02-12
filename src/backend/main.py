@@ -9,7 +9,6 @@ It provides:
 - CORS configuration for local frontend development
 """
 import asyncio
-import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query, Request
@@ -19,11 +18,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 
-# Add parent directory to path for core module access
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Path to built frontend (relative to backend directory)
-FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
+# Path to built frontend (at package root, two levels up from src/backend/)
+FRONTEND_DIST = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
 from core import (
     CreateNodeRequest, UpdateNodeRequest,
@@ -33,41 +29,44 @@ from core import (
 from diagram_manager import diagram_manager
 from websocket_manager import ws_manager
 
-# Path to hooks directory (can be overridden via env var)
+# Hook directories: committed hooks in src/hooks/, local hooks in hooks.local/
 import os
 HOOKS_DIR = Path(os.environ.get(
     "DIAGRAM_TOOL_HOOKS_DIR",
-    str(Path(__file__).parent.parent / "hooks")
+    str(Path(__file__).parent.parent / "hooks")  # src/hooks/
 ))
+HOOKS_LOCAL_DIR = Path(__file__).parent.parent.parent / "hooks.local"
 
 
 def load_hooks():
-    """Load and register hooks from the hooks directory.
+    """Load and register hooks from committed and local hook directories.
 
     Hooks are Python modules with a register_hooks(diagram_manager) function.
-    This allows external integrations (like Systems) without coupling core code.
+    Scans both src/hooks/ (committed, general-purpose) and hooks.local/
+    (uncommitted, environment-specific).
     """
-    if not HOOKS_DIR.exists():
-        return
-
     import importlib.util
 
-    for hook_file in HOOKS_DIR.glob("*.py"):
-        if hook_file.name.startswith("_"):
+    for hooks_dir in (HOOKS_DIR, HOOKS_LOCAL_DIR):
+        if not hooks_dir.exists():
             continue
 
-        try:
-            spec = importlib.util.spec_from_file_location(
-                hook_file.stem, hook_file
-            )
-            if spec and spec.loader:
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
+        for hook_file in hooks_dir.glob("*.py"):
+            if hook_file.name.startswith("_"):
+                continue
 
-                if hasattr(module, "register_hooks"):
-                    module.register_hooks(diagram_manager)
-        except Exception:
-            pass  # Silently skip failed hooks
+            try:
+                spec = importlib.util.spec_from_file_location(
+                    hook_file.stem, hook_file
+                )
+                if spec and spec.loader:
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+
+                    if hasattr(module, "register_hooks"):
+                        module.register_hooks(diagram_manager)
+            except Exception:
+                pass  # Silently skip failed hooks
 
 
 # --- Async change notification ---
@@ -98,7 +97,7 @@ async def lifespan(app: FastAPI):
     # Register change callback
     diagram_manager.on_change(on_diagram_change)
 
-    # Load external hooks (Systems integration, etc.)
+    # Load external hooks
     load_hooks()
 
     # Start background broadcaster
@@ -522,7 +521,7 @@ async def distribute_nodes(request: DistributeNodesRequest):
 # --- List Diagrams ---
 
 @app.get("/api/diagrams")
-async def list_diagrams(directory: str = Query(default="/home/nick/diagrams")):
+async def list_diagrams(directory: str = Query(default=os.path.expanduser("~/diagrams"))):
     """List diagram files in a directory."""
     from pathlib import Path
     path = Path(directory)

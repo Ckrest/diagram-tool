@@ -1,0 +1,73 @@
+# Diagram Tool configuration
+
+# =============================================================================
+# BACKEND API SERVER
+# =============================================================================
+
+backend:
+  # Host to bind the API server
+  host: "127.0.0.1"
+
+  # Port for the backend API and frontend serving
+  port: 8765
+
+  # CORS allowed origins for local development
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+    - "http://127.0.0.1:5173"
+
+# =============================================================================
+# FRONTEND
+# =============================================================================
+
+frontend:
+  # Vite dev server port (used during development)
+  dev_port: 5173
+
+  # URL used when opening the browser
+  url: "http://localhost:8765"
+
+# =============================================================================
+# WEBSOCKET
+# =============================================================================
+
+websocket:
+  # WebSocket endpoint path
+  path: "/ws"
+
+  # Ping/pong support for connection keepalive
+  ping_enabled: true
+
+# =============================================================================
+# DIRECTORIES
+# =============================================================================
+
+# Directory for application data (diagram files, exports)
+# Can be overridden via DIAGRAM_DATA_DIR environment variable
+data_dir: "$HOME/diagrams"
+
+# Directory for temporary/cached files (thumbnails, auto-saves)
+# Can be overridden via DIAGRAM_CACHE_DIR environment variable
+cache_dir: ""
+
+# =============================================================================
+# DIAGRAM STORAGE
+# =============================================================================
+
+storage:
+  # Default directory for listing and saving diagrams
+  # Can be overridden via DIAGRAM_DATA_DIR environment variable
+  diagrams_directory: "$HOME/diagrams"
+
+  # File format for saved diagrams
+  format: "json"
+
+# =============================================================================
+# HOOKS
+# =============================================================================
+
+hooks:
+  # Directory for external hook modules (Python files with register_hooks function)
+  # Can be overridden via DIAGRAM_TOOL_HOOKS_DIR environment variable
+  directory: "src/hooks"

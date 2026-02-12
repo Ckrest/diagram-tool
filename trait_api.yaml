@@ -1,0 +1,4 @@
+# diagram-tool - api trait configuration
+
+ports:
+- 8765

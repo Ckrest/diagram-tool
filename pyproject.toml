@@ -1,0 +1,29 @@
+[project]
+name = "diagram-tool"
+description = "Visual diagram editor with React frontend and Python backend"
+version = "0.1.0"
+requires-python = ">=3.10"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Ckrest"}]
+dependencies = [
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+    "pydantic>=2.0",
+    "websockets>=12.0",
+    "mcp>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.urls]
+Repository = "https://github.com/Ckrest/diagram-tool"
+
+[project.scripts]
+diagram-tool = "diagram_tool.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"

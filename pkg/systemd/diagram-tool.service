@@ -1,0 +1,12 @@
+[Unit]
+Description=Diagram Tool - Visual diagram editor
+
+[Service]
+Type=simple
+WorkingDirectory=/home/nick/Systems/tools/diagram-tool/src/backend
+ExecStart=/home/nick/Systems/tools/diagram-tool/src/backend/venv/bin/python main.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

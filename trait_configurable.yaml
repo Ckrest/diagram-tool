@@ -1,0 +1,9 @@
+# diagram-tool - configurable trait configuration
+
+env_prefix: DIAGRAM
+data_dir:
+  default: ~/diagrams
+  description: "Directory for saving diagram files"
+cache_dir:
+  default: ~/.cache/diagram-tool
+  description: "Temporary files and build artifacts"
