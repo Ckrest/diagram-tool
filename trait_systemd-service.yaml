@@ -1,5 +1,0 @@
-# diagram-tool - systemd-service trait configuration
-
-service: diagram-tool
-ports:
-- 8765
