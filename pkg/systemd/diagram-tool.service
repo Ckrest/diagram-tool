@@ -5,6 +5,6 @@ Description=Diagram Tool - Visual diagram editor
 Type=simple
 Slice=app-graphical.slice
 WorkingDirectory=%h/Systems/tools/diagram-tool/src/backend
-ExecStart=%h/Systems/tools/diagram-tool/src/backend/venv/bin/python main.py
+ExecStart=/usr/bin/python3 main.py
 Restart=on-failure
 RestartSec=5
